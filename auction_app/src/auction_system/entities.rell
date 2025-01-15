@@ -1,0 +1,34 @@
+entity nft {
+    key id: byte_array = op_context.transaction.tx_rid;
+    mutable owner: account;
+    created_at: timestamp = op_context.last_block_time;
+    index owner;
+}
+
+entity art_nft {
+    key nft;
+    name;
+    artist_name: text; // Name of the artist
+    description: text; // Optional description of the artwork
+    creation_date: timestamp = op_context.last_block_time; // Timestamp of when the NFT was created/minted
+    image_url: text; // URL pointing to the artwork image
+    category: text; // Category/genre of the artwork (e.g., "abstract", "landscape", etc.)
+
+}
+
+entity listed_art_nft_for_auction {
+    key nft;
+    listed_date: timestamp = op_context.last_block_time;
+    end_date: timestamp;
+    owner: account;
+    mutable min_bid: big_integer;
+}
+
+entity bid {
+    key id: byte_array;
+    index listed_art_nft_for_auction;
+    bidder: account;
+    bid_amount: big_integer;
+    bid_time: timestamp;
+    key listed_art_nft_for_auction, bidder;
+}

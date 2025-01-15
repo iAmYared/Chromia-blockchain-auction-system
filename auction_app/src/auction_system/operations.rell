@@ -1,0 +1,24 @@
+operation create_user(pubkey) {
+    val account = create_account_with_auth(single_sig_auth_descriptor(pubkey, set(["A", "T"])));
+    Unsafe.mint(account, dapp_meta.asset, 1000);
+}
+
+operation mint_art_nft(name, artist_name: text, description: text, image_url: text, category: text) {
+    val account = auth.authenticate();
+    val nft = create nft ( account );
+    create art_nft (
+        nft,
+        name,
+        artist_name,
+        description,
+        image_url,
+        category
+    );
+}
+
+operation list_art_nft_for_auction(id: integer, price: big_integer, end_date: timestamp) {
+    val account = auth.authenticate();
+    val (nft, owner) = nft @ { .rowid == rowid(id) } ( $, .owner );
+    require(owner == account, "User must be owner of NFT!");
+    create listed_art_nft_for_auction ( .nft = nft, .min_bid = price, .end_date = end_date, .owner = owner );
+}
