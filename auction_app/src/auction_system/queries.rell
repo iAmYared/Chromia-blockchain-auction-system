@@ -1,0 +1,45 @@
+enum art_nft_sorting {
+    NONE,
+    PRICE_HIGH,
+    PRICE_LOW
+}
+
+query get_art_nft(
+    amount: integer,
+    art_nft_sorting
+) =(
+art_auction,
+art_nft
+) @* {
+    art_auction.nft == art_nft.nft
+} ( @omit @sort_desc when (art_nft_sorting) {
+        PRICE_HIGH -> .min_bid;
+        PRICE_LOW-> - .min_bid;
+        else -> art_auction.rowid.to_integer()
+    },
+    listed_art_nft_dto (
+        min_bid = art_auction.min_bid,
+        id = art_auction.nft.rowid.to_integer(),
+        art = art_auction.to_struct()
+
+    )
+) limit amount;
+
+struct listed_art_nft_dto {
+    id: integer;
+    min_bid: big_integer;
+    art: struct<art_auction>;
+}
+
+query get_transactions() {
+  val txs = transaction @* { } ( gtv.from_bytes(.tx_data) );
+  return list<tx>.from_gtv(txs.to_gtv());
+}
+query get_users() = nft @* {};
+
+query log_data() = log_asset_id();
+
+function log_asset_id() {
+    val asset_id = ("Abyssinia", chain_context.blockchain_rid).hash();
+    return asset_id;
+}

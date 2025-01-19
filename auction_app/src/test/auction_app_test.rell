@@ -1,3 +1,62 @@
-@test module;
+// @test module;
 
-import main.*;
+// import main.*;
+// import lib.ft4.core.accounts.strategies.open.{ras_open};
+// import lib.ft4.assets.*;
+// import lib.ft4.external.accounts.{get_accounts_by_signer};
+// import lib.ft4.external.accounts.strategies.{ register_account};
+// import lib.ft4.external.assets.{get_asset_balance, get_assets_by_name, transfer};
+// import lib.ft4.test.utils.{ft_auth_operation_for};
+// import lib.ft4.utils.{paged_result};
+// import lib.ft4.test.utils.{create_auth_descriptor};
+
+// function test_create_account_and_register_and_mint_asset(){
+//     val alice = rell.test.keypairs.alice;
+//     val charlie = rell.test.keypairs.charlie;
+    
+    
+//     val required_asset = (
+//         name = "Abyssinia",
+//         id = ("Abyssinia", chain_context.blockchain_rid).hash(),
+//         symbol = "ABY",
+//         decimals = 10,
+//         blockchain_rid = x"47F90A3B0110D819617C813C6E84C28DD88B9E44C61C78BD245CB19D1BFC836C",
+//         icon_url = "https://allaboutethio.com/images/ethiopian-imperial-order-of-solomon-flag.jpg",
+//         type = "ft4",
+//         supply = 1000L,
+
+//     );
+
+//     val auth_descriptor_alice = create_auth_descriptor(alice.pub, ["A", "T"], null.to_gtv());
+//     val auth_descriptor_charlie = create_auth_descriptor(charlie.pub, ["A", "T"], null.to_gtv());
+
+//     rell.test.tx()
+//         .op(ras_open(auth_descriptor_alice))
+//         .op(register_account())
+//         .sign(alice)
+//         .run();
+//     rell.test.tx()
+//         .op(ras_open(auth_descriptor_charlie))
+//         .op(register_account())
+//         .sign(charlie)
+//         .run();
+
+//     rell.test.tx()
+//         .op(ft_auth_operation_for(alice.pub))
+//         .op(Unsafe.register_asset(
+//             required_asset.name,
+//             required_asset.symbol,
+//             required_asset.decimals,
+//             required_asset.supply,
+//             required_asset.icon_url    
+//         )
+
+//         ).sign(alice)
+//         .run();
+
+
+        
+
+
+
+// }

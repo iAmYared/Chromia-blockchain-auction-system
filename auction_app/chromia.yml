@@ -7,6 +7,8 @@ blockchains:
           max_points: 10
           recovery_time: 5000
           points_at_account_creation: 2
+      auction_system:
+        dapp_account_signer: x"032958997A63A4FB56C149BB12B17A8B8C17BCBB1B09C4B0D8FC64F38B1900E42C" 
 compile:
   rellVersion: 0.13.14
 database:

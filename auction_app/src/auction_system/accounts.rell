@@ -1,4 +1,5 @@
 operation create_user(pubkey) {
     val account = create_account_with_auth(single_sig_auth_descriptor(pubkey, set(["A", "T"])));
     Unsafe.mint(account, dapp_meta.asset, 1000);
+    log("user with id %s was created".format(pubkey));
 }

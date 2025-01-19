@@ -1,0 +1,6 @@
+struct account_dto {
+    id: byte_array;
+    type: text;
+}
+
+function account_from_gtv(paged_result) = account_dto.from_gtv_pretty(paged_result.data[0]);

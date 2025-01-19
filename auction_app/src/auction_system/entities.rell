@@ -1,7 +1,6 @@
 entity nft {
     key id: byte_array = op_context.transaction.tx_rid;
     mutable owner: account;
-    created_at: timestamp = op_context.last_block_time;
     index owner;
 }
 
@@ -10,25 +9,48 @@ entity art_nft {
     name;
     artist_name: text; // Name of the artist
     description: text; // Optional description of the artwork
-    creation_date: timestamp = op_context.last_block_time; // Timestamp of when the NFT was created/minted
-    image_url: text; // URL pointing to the artwork image
-    category: text; // Category/genre of the artwork (e.g., "abstract", "landscape", etc.)
-
+    image_url: text;
+    // URL pointing to the artwork image
 }
 
-entity listed_art_nft_for_auction {
+entity art_auction {
     key nft;
     listed_date: timestamp = op_context.last_block_time;
     end_date: timestamp;
     owner: account;
     mutable min_bid: big_integer;
+    mutable finalized: boolean = false;
 }
 
 entity bid {
-    key id: byte_array;
-    index listed_art_nft_for_auction;
-    bidder: account;
+    key id: byte_array = op_context.transaction.tx_rid;
+    index art_auction;
+    key bidder_account: account;
     bid_amount: big_integer;
-    bid_time: timestamp;
-    key listed_art_nft_for_auction, bidder;
+    bid_timestamp: timestamp = op_context.last_block_time;
+    key art_auction, bidder_account;
+}
+
+
+
+
+struct module_args {
+    dapp_account_signer: pubkey;
+}
+
+
+struct tx_op {
+  op_name: text;
+  op_args: list<gtv>;
+}
+
+struct tx_body {
+  tx_rid: byte_array;
+  ops: list<tx_op>;
+  signers: list<byte_array>;
+}
+
+struct tx {
+  tx_body;
+  signatures: list<byte_array>;
 }

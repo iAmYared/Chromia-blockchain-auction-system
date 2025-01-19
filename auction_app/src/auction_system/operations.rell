@@ -1,10 +1,6 @@
-operation create_user(pubkey) {
-    val account = create_account_with_auth(single_sig_auth_descriptor(pubkey, set(["A", "T"])));
-    Unsafe.mint(account, dapp_meta.asset, 1000);
-}
-
-operation mint_art_nft(name, artist_name: text, description: text, image_url: text, category: text) {
+operation mint_art_nft(name, artist_name: text, description: text, image_url: text) {
     val account = auth.authenticate();
+    Unsafe.transfer(account, dapp_meta.account, dapp_meta.asset, 100);
     val nft = create nft ( account );
     create art_nft (
         nft,
@@ -12,13 +8,61 @@ operation mint_art_nft(name, artist_name: text, description: text, image_url: te
         artist_name,
         description,
         image_url,
-        category
     );
+    
 }
 
 operation list_art_nft_for_auction(id: integer, price: big_integer, end_date: timestamp) {
     val account = auth.authenticate();
     val (nft, owner) = nft @ { .rowid == rowid(id) } ( $, .owner );
     require(owner == account, "User must be owner of NFT!");
-    create listed_art_nft_for_auction ( .nft = nft, .min_bid = price, .end_date = end_date, .owner = owner );
+    create art_auction ( .nft = nft, .min_bid = price, .end_date = end_date, .owner = owner );
 }
+
+operation place_bid(auction_id: byte_array,bid_amount: big_integer ){
+    val account = auth.authenticate();
+    val (nft, owner) = art_auction @ {.nft.id == auction_id} ($, .owner);
+    require(account == owner, "User must be the owner of the NFT");
+    val min_bid = art_auction @ {.nft.id == auction_id} (.min_bid);
+    require(bid_amount > min_bid, "Bid amount must be greater than %s".format(min_bid));
+    val now : timestamp = op_context.last_block_time;
+    require(now < (art_auction @ {.nft.id == auction_id} (.end_date)), "Auction has ended");
+    lock_asset("auction", account, dapp_meta.asset, bid_amount);
+
+    create bid(nft, account, bid_amount);
+}
+
+operation determine_winner(auction_id: byte_array) {
+    require( art_auction @? {.nft.id == auction_id}, "Could not find auction with id %s".format(auction_id) );
+    
+    val now: timestamp = op_context.last_block_time;
+    val auction_owner = art_auction @ {.nft.id==auction_id}(.owner);
+        // check if the auction has ended
+    if (now >= (art_auction @ {.nft.id == auction_id} (.end_date))) {
+
+        // check if the auction is already finalized :- make it idempotent
+        if (art_auction @ {.nft.id == auction_id}(.finalized)) {
+            log("Auction with id %s is already finalized.".format(auction_id));
+        }
+
+        require(bid @? {.art_auction.nft.id == auction_id}, "Could not find bids with auction id %s".format(auction_id) );
+        
+        val (bid_amount, auction_winner) = bid @ {.art_auction.nft.id == auction_id} (
+             @sort_desc .bid_amount, .bidder_account
+        ) limit 1;
+
+        Unsafe.transfer(auction_winner,auction_owner, dapp_meta.asset,bid_amount );
+
+        for (b in bid @* {.art_auction.nft.id == auction_id}) {
+            unlock_asset("auction", b.bidder_account, dapp_meta.asset, b.bid_amount);
+        }
+
+        delete bid @ {.art_auction.nft.id == auction_id};
+
+        update art_auction @ {.nft.id == auction_id} (.finalized = true);
+
+    } 
+
+}
+
+
