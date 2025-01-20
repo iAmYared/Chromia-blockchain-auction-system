@@ -4,14 +4,35 @@ enum art_nft_sorting {
     PRICE_LOW
 }
 
-query get_art_nft(
+query get_active_auctions(
     amount: integer,
-    art_nft_sorting
+    art_nft_sorting, now: timestamp = get_now()
 ) =(
 art_auction,
 art_nft
 ) @* {
-    art_auction.nft == art_nft.nft
+    art_auction.nft == art_nft.nft, .end_date > now
+} ( @omit @sort_desc when (art_nft_sorting) {
+        PRICE_HIGH -> .min_bid;
+        PRICE_LOW-> - .min_bid;
+        else -> art_auction.rowid.to_integer()
+    },
+    listed_art_nft_dto (
+        min_bid = art_auction.min_bid,
+        id = art_auction.nft.rowid.to_integer(),
+        art = art_auction.to_struct()
+
+    )
+) limit amount;
+
+query get_completed_auctions(
+    amount: integer,
+    art_nft_sorting, now: timestamp = get_now()
+) =(
+art_auction,
+art_nft
+) @* {
+    art_auction.nft == art_nft.nft, .end_date < now
 } ( @omit @sort_desc when (art_nft_sorting) {
         PRICE_HIGH -> .min_bid;
         PRICE_LOW-> - .min_bid;
@@ -35,11 +56,32 @@ query get_transactions() {
   val txs = transaction @* { } ( gtv.from_bytes(.tx_data) );
   return list<tx>.from_gtv(txs.to_gtv());
 }
-query get_users() = nft @* {};
 
-query log_data() = log_asset_id();
+query get_auction_by_id(auction_id: byte_array) = art_auction @? {.nft.id == auction_id};
 
-function log_asset_id() {
-    val asset_id = ("Abyssinia", chain_context.blockchain_rid).hash();
-    return asset_id;
+query get_auction_status(auction_id: byte_array) = art_auction @? {.nft.id == auction_id} (.end_date, .finalized);
+
+// ========== Bid Related================
+query get_bid_data(auction_id: byte_array, amount: integer) =
+    (bid, art_auction) @* {bid.art_auction == art_auction } (
+        @omit @sort_desc bid.bid_amount,
+        bid_data_dto(
+            highest_bid = bid @ {.art_auction.nft.id == auction_id} (@max .bid_amount) ?: 0L, // this may need correction
+            bids = bid.to_struct(),
+            auction = art_auction.to_struct()
+        )
+    )limit amount;
+
+struct bid_data_dto {
+    highest_bid: big_integer;
+    bids: struct<bid>;
+    auction: struct<art_auction>;
 }
+
+query get_highest_bid(auction_id: byte_array) = bid @ {.art_auction.nft.id == auction_id} (@sort_desc .bid_amount) limit 1;
+
+
+
+
+
+

@@ -1,6 +1,19 @@
+// Helper functions to retrieve account infromation
+
 struct account_dto {
     id: byte_array;
     type: text;
 }
 
+struct art_nft_dto {
+    nft: nft;
+    name: text;
+}
+
+function get_now() {
+    val now : timestamp = op_context.last_block_time;
+    return now;
+}
+
 function account_from_gtv(paged_result) = account_dto.from_gtv_pretty(paged_result.data[0]);
+

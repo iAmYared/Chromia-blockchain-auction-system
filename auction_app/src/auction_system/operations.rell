@@ -54,6 +54,7 @@ operation determine_winner(auction_id: byte_array) {
         Unsafe.transfer(auction_winner,auction_owner, dapp_meta.asset,bid_amount );
 
         for (b in bid @* {.art_auction.nft.id == auction_id}) {
+            if (b.bidder_account == auction_winner) continue;
             unlock_asset("auction", b.bidder_account, dapp_meta.asset, b.bid_amount);
         }
 
